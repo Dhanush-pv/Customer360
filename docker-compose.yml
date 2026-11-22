@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: customer360-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${C360_DB_NAME:-customer360}
+      POSTGRES_USER: ${C360_DB_USER:-c360_app}
+      POSTGRES_PASSWORD: ${C360_DB_PASSWORD:-local_dev_only_change_me}
+    ports:
+      - "${C360_DB_PORT:-5432}:5432"
+    volumes:
+      - customer360_pgdata:/var/lib/postgresql/data
+      - ./sql/001_create_source_schemas.sql:/docker-entrypoint-initdb.d/001_create_source_schemas.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${C360_DB_USER:-c360_app} -d ${C360_DB_NAME:-customer360}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+volumes:
+  customer360_pgdata:
